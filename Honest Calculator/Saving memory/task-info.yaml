@@ -1,0 +1,178 @@
+type: edu
+files:
+- name: test/__init__.py
+  visible: false
+  learner_created: false
+- name: test/tests.py
+  visible: false
+  text: |
+    from hstest import StageTest, CheckResult, WrongAnswer, dynamic_test, TestedProgram
+
+    msg = ["Enter an equation",
+           "Do you even know what numbers are? Stay focused!",
+           "Yes ... an interesting math operation. You've slept through all classes, haven't you?",
+           "Yeah... division by zero. Smart move...",
+           "Do you want to store the result? (y / n):",
+           "Do you want to continue calculations? (y / n):",
+           " ... lazy",
+           " ... very lazy",
+           " ... very, very lazy",
+           "You are",
+           "Are you sure? It is only one digit! (y / n)",
+           "Don't be silly! It's just one number! Add to the memory? (y / n)",
+           "Last chance! Do you really want to embarrass yourself? (y / n)"
+    ]
+
+
+    def add_enter(txt):
+        return "\n".join([txt, msg[0]])
+
+
+    def add_memory(txt):
+        return "\n".join([txt, msg[4]])
+
+
+    data = [(("4 * 5.0", "\n".join([msg[9] + msg[6], add_memory("20.0")])), ("n", msg[5]), ("n", "")),
+            (("2 + 5.5", add_memory("7.5")), ("y", msg[5]), ("y", msg[0]), ("M - 9", add_memory("-1.5")), ("n", msg[5]), ("n", "")),
+            (("225 / 15", add_memory("15.0")), ("y", msg[5]), ("y",msg[0]),
+             ("1 * 5", "\n".join([msg[9] + msg[6] + msg[7], add_memory("5.0")])), ("y", msg[10]), ("y", msg[11]), ("n", msg[5]), ("y", msg[0]),
+            ("M - 10", add_memory("5.0")), ("y", msg[10]), ("y", msg[11]), ("y", msg[12]), ("y", msg[5]), ("y", msg[0]),
+             ("M / M",  "\n".join([msg[9] + msg[6], add_memory("1.0")])), ("n", msg[5]), ("n", "")),
+           ]  # (input data, msg sentence])
+
+
+    class HonestCalc(StageTest):
+        @dynamic_test(data=data)
+        def test(self, *items):
+            pr = TestedProgram()
+            output = pr.start()
+            if msg[0] not in output:
+                return CheckResult.wrong(f"Expected: ({msg[0]});\nFound:    ({output.strip()})")
+            for item in items:
+                output = pr.execute(item[0])
+                if item[1] != output.strip():
+                    return CheckResult.wrong(f"Expected:\n{item[1]}\nFound:\n{output.strip()}")
+            if not pr.is_finished():
+                return CheckResult.wrong("Your program unnecessarily waiting for input.")
+            return CheckResult.correct()
+
+
+    if __name__ == '__main__':
+        HonestCalc().run_tests()
+  learner_created: false
+- name: tests.py
+  visible: false
+  text: |
+    from test.tests import HonestCalc
+
+    if __name__ == '__main__':
+        HonestCalc().run_tests()
+  learner_created: false
+- name: honest_calc.py
+  visible: true
+  text: |2
+
+    msg_0 = "Enter an equation"
+    msg_1 = "Do you even know what numbers are? Stay focused!"
+    msg_2 = "Yes ... an interesting math operation. You've slept through all classes, haven't you?"
+    msg_3 = "Yeah... division by zero. Smart move..."
+    msg_4 = "Do you want to store the result? (y / n):"
+    msg_5 = "Do you want to continue calculations? (y / n):"
+    msg_6 = " ... lazy"
+    msg_7 = " ... very lazy"
+    msg_8 = " ... very, very lazy"
+    msg_9 = "You are"
+    memory = 0
+
+
+    def is_number(n):
+        if "." in n:
+            return n.replace(".", "", 1).isdecimal()
+        return n.isdecimal()
+
+
+    def is_one_digit(v):
+        if -10 < v < 10 and v.is_integer():
+            return True
+        else:
+            return False
+
+
+    def check(v1, v2, v3):
+        msg = ""
+        if is_one_digit(v1) and is_one_digit(v2):
+            msg += msg_6
+        if (v1 == 1 or v2 == 1) and v3 == "*":
+            msg += msg_7
+        if (v1 == 0 or v2 == 0) and (v3 == "*" or v3 == "+" or v3 == "-"):
+            msg += msg_8
+        if msg != "":
+            msg = msg_9 + msg
+            print(msg)
+
+
+    def ending(res):
+        mem = 0
+        while True:
+            print(msg_4)
+            ans1 = input()
+            if ans1 == "y":
+                mem = res
+                break
+            elif ans1 == "n":
+                break
+        while True:
+            print(msg_5)
+            ans2 = input()
+            if ans2 == "y" or "n":
+                return ans2, mem
+
+
+    while True:
+        print(msg_0)
+        calc = input()
+        a, operand, b = calc.split()
+
+        if a == "M":
+            a = str(memory)
+        elif b == "M":
+            b = str(memory)
+
+        if is_number(a) is False or is_number(b) is False:
+            print(msg_1)
+        elif operand not in ["+", "-", "*", "/"]:
+            print(msg_2)
+        else:
+            check(float(a), float(b), operand)
+            if operand == "+":
+                result = float(a) + float(b)
+                print(result)
+                ans, memory = ending(result)
+                if ans == "n":
+                    break
+            elif operand == "-":
+                result = float(a) - float(b)
+                print(result)
+                ans, memory = ending(result)
+                if ans == "n":
+                    break
+            elif operand == "*":
+                result = float(a) * float(b)
+                print(result)
+                ans, memory = ending(result)
+                if ans == "n":
+                    break
+            elif operand == "/":
+                try:
+                    result = float(a) / float(b)
+                except ZeroDivisionError:
+                    print(msg_3)
+                else:
+                    print(result)
+                    ans, memory = ending(result)
+                    if ans == "n":
+                        break
+  learner_created: false
+feedback_link: https://hyperskill.org/learn/step/15814#comment
+status: Solved
+record: 4
